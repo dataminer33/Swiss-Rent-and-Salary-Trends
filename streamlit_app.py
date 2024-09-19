@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import base64
 import os
+from sklearn . preprocessing import MinMaxScaler
 
 # Set page config for a more professional look
 st.set_page_config(page_title="Swiss Rental Price Analysis", layout="wide", initial_sidebar_state="expanded")
@@ -57,6 +58,7 @@ def set_bg_hack(main_bg):
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
 
+
 background_image_path = 'static/images/background.jpg'
 
 # Apply the background
@@ -92,9 +94,9 @@ salary_data = load_salary_data()
 
 # Sidebar for navigation
 st.sidebar.title('Navigation')
-page = st.sidebar.radio('Choose a page', ['Price Trends', 'General Facts', 'Salary Rent Comparison', 'Salary Trends'])
+page = st.sidebar.radio('Choose a page', ['Rent Price Trends', 'General Rental Facts', 'Salary Rent Comparison', 'Salary Trends'])
 
-if page == 'General Facts':
+if page == 'General Rental Facts':
     st.title('Overview of Swiss Rental Prices 2010 - 2022')
     
     
@@ -148,8 +150,8 @@ if page == 'General Facts':
     st.title('Descriptive Statistics')
     st.dataframe(data.describe().style.background_gradient(cmap='Blues'))
     
-elif page == 'Price Trends':
-    st.title('Price Trends Over Years')
+elif page == 'Rent Price Trends':
+    st.title('Rent Price Trends Over Years')
     
     if 'Year' not in data.columns:
         st.error("The 'Year' column is missing from the data. Please ensure your dataset includes yearly information.")
@@ -164,7 +166,7 @@ elif page == 'Price Trends':
             canton_data = data[data['Kanton'] == canton]
             fig.add_trace(go.Scatter(x=canton_data['Year'], y=canton_data['Total AVG Price'],
                                      mode='lines+markers', name=canton))
-        fig.update_xaxes(tickangle=45,tickfont=dict(color='black', size=16))
+        fig.update_xaxes(tickfont=dict(color='black', size=16))
         fig.update_yaxes(tickfont=dict(color='black', size=16))
         fig.update_layout(
             title=dict(text='Rental Price Trends by Canton', font=dict(size=20)),
@@ -203,25 +205,34 @@ elif page == 'Salary Rent Comparison':
 
     # Merge rent and salary data
     merged_data = pd.merge(data, salary_data, on=['Year', 'Region'])
-
+    scaler_salary = MinMaxScaler()
+    scaler_rent = MinMaxScaler()
+    merged_data['Gross Salary scaled'] = scaler_salary.fit_transform(merged_data[['Gross Salary']])
+    merged_data['Total AVG Price scaled'] = scaler_rent.fit_transform(merged_data[['Total AVG Price']])
     # Select region for comparison
     regions = merged_data['Region'].unique()
     selected_region = st.selectbox('Select a region', regions)
 
     # Filter data for selected region
     region_data = merged_data[merged_data['Region'] == selected_region]
+    region_data_scaled = region_data.groupby('Year').agg({'Total AVG Price scaled': 'mean', 'Gross Salary scaled': 'mean'}).reset_index()
+    region_data = region_data.groupby('Year').agg({'Total AVG Price': 'mean', 'Gross Salary': 'mean'}).reset_index()
 
     # Create line plot
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=region_data['Year'], y=region_data['Total AVG Price'],
+    fig.add_trace(go.Scatter(x=region_data_scaled['Year'], y=region_data_scaled['Total AVG Price scaled'],
                              mode='lines+markers', name='Average Rent'))
-    fig.add_trace(go.Scatter(x=region_data['Year'], y=region_data['Gross Salary'],
+    fig.add_trace(go.Scatter(x=region_data_scaled['Year'], y=region_data_scaled['Gross Salary scaled'],
                              mode='lines+markers', name='Average Salary'))
-
+    fig.update_xaxes(tickfont=dict(color='black', size=16))
+    fig.update_yaxes(tickfont=dict(color='black', size=14))
     fig.update_layout(
-        title=f'Rent vs Salary Trends in {selected_region}',
+        title=dict(text=f'Rent vs Salary Trends in {selected_region}', font=dict(size=20)),
+            title_x=0.05,
         xaxis_title='Year',
         yaxis_title='Amount (CHF)',
+        xaxis_title_font=dict(color='black', size=20),
+        yaxis_title_font=dict(color='black', size=20), 
         legend_title='Metric',
         plot_bgcolor='rgba(255,255,255,0.8)',
         paper_bgcolor='rgba(255,255,255,0.8)'
@@ -229,7 +240,6 @@ elif page == 'Salary Rent Comparison':
 
     st.plotly_chart(fig)
 
-    # Calculate and display percentage increases
     start_year = region_data['Year'].min()
     end_year = region_data['Year'].max()
     rent_increase = (region_data.loc[region_data['Year'] == end_year, 'Total AVG Price'].values[0] /
@@ -237,8 +247,24 @@ elif page == 'Salary Rent Comparison':
     salary_increase = (region_data.loc[region_data['Year'] == end_year, 'Gross Salary'].values[0] /
                        region_data.loc[region_data['Year'] == start_year, 'Gross Salary'].values[0] - 1) * 100
 
-    st.write(f"Rent increase from {start_year} to {end_year}: {rent_increase:.2f}%")
-    st.write(f"Salary increase from {start_year} to {end_year}: {salary_increase:.2f}%")
+    # Define the colors based on positive or negative growth
+    rent_color = 'green' if rent_increase > 0 else 'red'
+    salary_color = 'green' if salary_increase > 0 else 'red'
+
+    # Format the output using Streamlit's markdown with rich text and emoji/icons
+    st.markdown(f"""
+        <div style="background-color: rgba(255, 255, 255, 0.8); padding: 20px; border-radius: 10px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);">
+            <h3 style="text-align:left;">Rent vs Salary Increase (from {start_year} to {end_year})</h3>       
+            <p style="font-size: 18px;">
+                🏠 <strong>Rent Increase:</strong> 
+                <span style="color:{rent_color}; font-weight:bold;">{rent_increase:.2f}%</span>  
+            </p>      
+            <p style="font-size: 18px;">
+                💼 <strong>Salary Increase:</strong> 
+                <span style="color:{salary_color}; font-weight:bold;">{salary_increase:.2f}%</span>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
 elif page == 'Salary Trends':
     st.title('Salary Trends Across Regions')
@@ -247,12 +273,33 @@ elif page == 'Salary Trends':
     #salary_trends = salary_data.groupby(['Year', 'Region'])['Gross Salary'].mean().reset_index()
 
     # Create line plot for all regions
-    fig = px.line(salary_data, x='Year', y='Gross Salary', color='Region',
-                  title='Salary Trends Across Regions')
+    fig = px.line(salary_data, x='Year', y='Gross Salary', color='Region')
 
+    # Shorten legend names
+    short_names = {
+        'Switzerland': 'Switzerland',
+        'Région lémanique (Genf, Waadt, Wallis)': 'Lémanique',
+        'Espace Mittelland (Bern, Fribourg, Jura, Neuenburg, Solothurn)': 'Mittelland',
+        'Northwestern Switzerland (Aargau, Baselland, Basel Stadt)': 'Northwestern',
+        'Zurich': 'Zurich',
+        'Eastern Switzerland (Appenzell A.Rh, Appenzell I.Rh, Glarus, Graubünden, St. Gallen, Schaffhausen, Thurgau)': 'Eastern',
+        'Central Switzerland (Luzern, Nidwalden, Obwalden, Schwyz, Uri, Zug)': 'Central',
+        'Tessin': 'Tessin'
+    }
+
+    # Update legend labels
+    fig.for_each_trace(lambda trace: trace.update(name=short_names.get(trace.name, trace.name)))
+
+
+    fig.update_xaxes(tickfont=dict(color='black', size=16))
+    fig.update_yaxes(tickfont=dict(color='black', size=14))
     fig.update_layout(
+        title=dict(text='Salary Trends Across Regions', font=dict(size=20)),
+        title_x = 0.38,
         xaxis_title='Year',
         yaxis_title='Gross Salary (CHF)',
+        xaxis_title_font=dict(color='black', size=20),
+        yaxis_title_font=dict(color='black', size=20), 
         legend_title='Region',
         plot_bgcolor='rgba(255,255,255,0.8)',
         paper_bgcolor='rgba(255,255,255,0.8)'
@@ -275,7 +322,17 @@ elif page == 'Salary Trends':
     salary_increases_df = pd.DataFrame(salary_increases)
     salary_increases_df = salary_increases_df.sort_values('Increase', ascending=False)
 
-    st.write(f"Salary increases from {start_year} to {end_year} by region:")
+
+
+    html_code = f"""
+            <div style="background-color: rgba(251, 251, 251, 0.8); padding: 5px; border-radius: 3px;">
+                <h2>Salary increases from {start_year} to {end_year} by region:</h2>
+            </div>
+            """
+
+    # Render HTML in Streamlit
+    st.markdown(html_code, unsafe_allow_html=True)
+    #st.title(f"Salary increases from {start_year} to {end_year} by region:")
     st.dataframe(salary_increases_df.style.format({'Increase': '{:.2f}%'}))
 
 # Run the Streamlit app
