@@ -10,6 +10,22 @@ from sklearn . preprocessing import MinMaxScaler
 # Set page config for a more professional look
 st.set_page_config(page_title="Swiss Rental Price Analysis", layout="wide", initial_sidebar_state="expanded")
 
+# Custom CSS to hide the top bar and style the app
+st.markdown("""
+    <style>
+        .stApp header {
+            background-color: rgba(0,0,0,0);
+        }
+        .stApp > header {
+            height: 0px;
+        }
+        .main .block-container {
+        #stDecoration {
+            display: none;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Function to encode the image
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
@@ -53,6 +69,12 @@ def set_bg_hack(main_bg):
         border-radius: 10px;
         background-color: rgba(251, 251, 251, 0.6);
     }
+    .white-bg {
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
     </style>
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
@@ -92,12 +114,16 @@ def load_salary_data():
 data = load_data()
 salary_data = load_salary_data()
 
+
+def create_title(title):
+    st.markdown(f'<div class="white-bg"><h1 style="text-align: center;">{title}</h1></div>', unsafe_allow_html=True)
+
 # Sidebar for navigation
 st.sidebar.title('Navigation')
 page = st.sidebar.radio('Choose a page', ['Rent Price Trends', 'General Rental Facts', 'Salary Rent Comparison', 'Salary Trends'])
 
 if page == 'General Rental Facts':
-    st.title('Overview of Swiss Rental Prices 2010 - 2022')
+    create_title('Overview of Swiss Rental Prices 2010 - 2022')
     
     
     data_2019 = data[data['Year'] == 2019]
@@ -147,11 +173,11 @@ if page == 'General Rental Facts':
     st.plotly_chart(fig)
     
     
-    st.title('Descriptive Statistics')
+    create_title('Descriptive Statistics')
     st.dataframe(data.describe().style.background_gradient(cmap='Blues'))
     
 elif page == 'Rent Price Trends':
-    st.title('Rent Price Trends Over Years')
+    create_title('Rent Price Trends Over Years')
     
     if 'Year' not in data.columns:
         st.error("The 'Year' column is missing from the data. Please ensure your dataset includes yearly information.")
@@ -201,7 +227,7 @@ elif page == 'Rent Price Trends':
 
 
 elif page == 'Salary Rent Comparison':
-    st.title('Salary vs Rent Comparison')
+    create_title('Salary vs Rent Comparison')
 
     # Merge rent and salary data
     merged_data = pd.merge(data, salary_data, on=['Year', 'Region'])
@@ -267,10 +293,7 @@ elif page == 'Salary Rent Comparison':
         """, unsafe_allow_html=True)
 
 elif page == 'Salary Trends':
-    st.title('Salary Trends Across Regions')
-
-    # Group salary data by year and region
-    #salary_trends = salary_data.groupby(['Year', 'Region'])['Gross Salary'].mean().reset_index()
+    create_title('Salary Trends Across Regions')
 
     # Create line plot for all regions
     fig = px.line(salary_data, x='Year', y='Gross Salary', color='Region')
@@ -331,10 +354,11 @@ elif page == 'Salary Trends':
             """
 
     # Render HTML in Streamlit
-    st.markdown(html_code, unsafe_allow_html=True)
+    #st.markdown(html_code, unsafe_allow_html=True)
     #st.title(f"Salary increases from {start_year} to {end_year} by region:")
+    #st.dataframe(salary_increases_df.style.format({'Increase': '{:.2f}%'}))
+    create_title(f"Salary increases from {start_year} to {end_year} by region:")
     st.dataframe(salary_increases_df.style.format({'Increase': '{:.2f}%'}))
-
 # Run the Streamlit app
 if __name__ == '__main__':
     st.sidebar.info('Navigate through different analyses using the radio buttons above.')

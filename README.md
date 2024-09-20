@@ -1,8 +1,12 @@
 # Swiss Rent and Salary Trends
 
+![Swiss Rent and Salary Trends](static/images/preview.png)
+
 A data-driven analysis of rental prices and salary trends across Switzerland, highlighting regional disparities and changes over time.
 Overview
 This project provides a comprehensive analysis of rental price trends and salary patterns across various regions in Switzerland. The data, gathered from multiple sources, allows for a comparison of rent and salary growth across different time periods and regions. Using this analysis, we can explore how salary increases align (or fail to align) with rising living costs, offering valuable insights into affordability in Swiss regions.
+
+[![Go to App](https://img.shields.io/badge/Go_to_App-Web_App-brightgreen)](https://swiss-rent-and-salary-trends.streamlit.app/)
 
 # Features
 
