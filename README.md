@@ -29,5 +29,5 @@ This project provides a comprehensive analysis of rental price trends and salary
 
 ## Data Source
 
-The salaries data in this dashboard is sourced from the [Bundesamt für Statistik](https://www.bfs.admin.ch/bfs/de/home/statistiken/arbeit-erwerb/loehne-erwerbseinkommen-arbeitskosten/lohnstruktur.html)
-The rent data used in this dashboard is sourced from the [Bundesamt für Statistik](https://www.bfs.admin.ch/bfs/de/home/statistiken/bau-wohnungswesen/wohnungen/mietwohnungen.html)
+- The salaries data in this dashboard is sourced from the [Bundesamt für Statistik](https://www.bfs.admin.ch/bfs/de/home/statistiken/arbeit-erwerb/loehne-erwerbseinkommen-arbeitskosten/lohnstruktur.html)
+- The rent data used in this dashboard is sourced from the [Bundesamt für Statistik](https://www.bfs.admin.ch/bfs/de/home/statistiken/bau-wohnungswesen/wohnungen/mietwohnungen.html)
