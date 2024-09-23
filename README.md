@@ -27,7 +27,7 @@ This project provides a comprehensive analysis of rental price trends and salary
 - Swiss Salary Trends: Yearly salary data categorized by Swiss regions.
 
 
-# Usage
-Launch the app by running the app.py file.
-Navigate through the dashboard to visualize salary and rent trends across various regions.
-Select a specific region to compare rent and salary growth and view the calculated percentage changes.
+## Data Source
+
+The salaries data in this dashboard is sourced from the [Bundesamt für Statistik]((https://www.bfs.admin.ch/bfs/de/home/statistiken/arbeit-erwerb/loehne-erwerbseinkommen-arbeitskosten/lohnstruktur.html)).
+The rent data used in this dashboard is sourced from the [Bundesamt für Statistik](https://www.bfs.admin.ch/bfs/de/home/statistiken/bau-wohnungswesen/wohnungen/mietwohnungen.html)
